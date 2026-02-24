@@ -9,6 +9,8 @@ Live leaderboard for TrackMania Nations Forever LAN parties. Throw it on a big s
 - **Admin page** — pick which maps to feature on the board, protected by basic auth so the crowd doesn't vote for the novelty maps
 - **Per-map rankings** — every player's best time, ranked, for each featured map
 
+![screenshot](screenshot.png)
+
 ## Dev guide
 
 ### Prerequisites
