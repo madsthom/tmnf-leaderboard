@@ -11,6 +11,11 @@ COPY templates/ templates/
 
 FROM python:3.13-slim
 
+LABEL org.opencontainers.image.title="tmnf-leaderboard"
+LABEL org.opencontainers.image.description="Live leaderboard for TrackMania Nations Forever LAN parties with fanfare on new records"
+LABEL org.opencontainers.image.url="https://github.com/madsthom/tmnf-leaderboard"
+LABEL org.opencontainers.image.source="https://github.com/madsthom/tmnf-leaderboard"
+
 WORKDIR /app
 COPY --from=builder /app /app
 

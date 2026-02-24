@@ -26,3 +26,7 @@ jobs:
           tags: |
             registry.0x01.dk/tmnf-leaderboard:${{ github.ref_name }}
             registry.0x01.dk/tmnf-leaderboard:latest
+          labels: |
+            org.opencontainers.image.version=${{ github.ref_name }}
+            org.opencontainers.image.revision=${{ github.sha }}
+            org.opencontainers.image.created=${{ github.event.head_commit.timestamp }}
