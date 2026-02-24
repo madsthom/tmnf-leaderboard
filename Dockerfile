@@ -1,12 +1,19 @@
-FROM python:3.12-alpine
+FROM python:3.13-slim AS builder
+
+COPY --from=ghcr.io/astral-sh/uv:0.6 /uv /usr/local/bin/uv
 
 WORKDIR /app
+COPY pyproject.toml uv.lock ./
+RUN uv sync --frozen --no-dev --no-install-project
 
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+COPY app.py .
+COPY templates/ templates/
 
-COPY leaderboard.py .
+FROM python:3.13-slim
+
+WORKDIR /app
+COPY --from=builder /app /app
 
 EXPOSE 8080
 
-CMD ["python", "leaderboard.py"]
+CMD ["/app/.venv/bin/uvicorn", "app:app", "--host", "0.0.0.0", "--port", "8080"]

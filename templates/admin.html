@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Admin - TMNF Leaderboard</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { background: #0f0f23; color: #ccc; font-family: 'Segoe UI', sans-serif; }
+    .container { max-width: 600px; margin: 0 auto; padding: 2rem 1rem; }
+    h1 { color: #00cc66; font-size: 1.8rem; text-align: center; margin-bottom: 0.5rem; }
+    .subtitle { text-align: center; color: #666; margin-bottom: 2rem; }
+    h2 { color: #0099ff; margin: 1.5rem 0 0.5rem; border-bottom: 1px solid #222; padding-bottom: 0.3rem; }
+    .map-list { list-style: none; }
+    .map-list li { padding: 0.6rem 0; border-bottom: 1px solid #1a1a2e; }
+    .map-list label { cursor: pointer; display: flex; align-items: center; gap: 0.8rem; font-size: 0.95rem; }
+    .map-list input[type="checkbox"] { width: 18px; height: 18px; accent-color: #00cc66; }
+    button { background: #00cc66; color: #0f0f23; border: none; padding: 0.7rem 2rem; font-size: 1rem;
+             font-weight: bold; border-radius: 4px; cursor: pointer; margin-top: 1.5rem; display: block; width: 100%; }
+    button:hover { background: #00e673; }
+    a { color: #0099ff; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    .nav { text-align: center; margin-top: 2rem; }
+  </style>
+</head>
+<body>
+<div class="container">
+  <h1>Admin</h1>
+  <p class="subtitle">Select maps to feature on the leaderboard</p>
+
+  <form method="post" action="/admin">
+    <h2>Maps</h2>
+    {% if maps %}
+    <ul class="map-list">
+      {% for m in maps %}
+      <li>
+        <label>
+          <input type="checkbox" name="maps" value="{{ m.id }}"
+                 {% if m.id in featured %}checked{% endif %}>
+          {{ m.name }}
+        </label>
+      </li>
+      {% endfor %}
+    </ul>
+    {% else %}
+    <p style="color: #555; padding: 1rem 0;">No maps found in database.</p>
+    {% endif %}
+    <button type="submit">Save</button>
+  </form>
+
+  <p class="nav"><a href="/">Back to leaderboard</a></p>
+</div>
+</body>
+</html>

@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>TMNF Leaderboard</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { background: #0f0f23; color: #ccc; font-family: 'Segoe UI', sans-serif; }
+    .container { max-width: 900px; margin: 0 auto; padding: 2rem 1rem; }
+    h1 { color: #00cc66; font-size: 2.5rem; text-align: center; }
+    .subtitle { text-align: center; color: #666; margin-bottom: 2rem; }
+    .map-section { margin-bottom: 2.5rem; }
+    .map-name { color: #0099ff; font-size: 1.4rem; margin-bottom: 0.3rem; border-bottom: 1px solid #222; padding-bottom: 0.3rem; }
+    .author-time { color: #555; font-size: 0.85rem; margin-bottom: 0.5rem; }
+    table { width: 100%; border-collapse: collapse; margin-bottom: 1rem; }
+    th { background: #1a1a2e; color: #00cc66; text-align: left; padding: 0.6rem; font-size: 0.85rem; }
+    td { padding: 0.5rem 0.6rem; border-bottom: 1px solid #1a1a2e; font-size: 0.95rem; }
+    tr:hover { background: #16213e; }
+    .rank { color: #555; width: 3rem; }
+    .empty { text-align: center; color: #555; padding: 2rem; font-size: 1.1rem; }
+    .no-maps { text-align: center; color: #555; padding: 3rem 0; }
+    .no-maps a { color: #0099ff; text-decoration: none; }
+    .no-maps a:hover { text-decoration: underline; }
+    .new-record { animation: flash 1.5s ease-out; }
+    @keyframes flash {
+      0% { background: #00cc66; color: #0f0f23; }
+      100% { background: transparent; color: #ccc; }
+    }
+    .gold { color: #ffd700; }
+    .silver { color: #c0c0c0; }
+    .bronze { color: #cd7f32; }
+
+    .fanfare-overlay {
+      display: none;
+      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(0, 204, 102, 0.08);
+      pointer-events: none; z-index: 1000;
+      animation: fanfare-bg 2s ease-out forwards;
+    }
+    .fanfare-overlay.active { display: block; }
+    @keyframes fanfare-bg {
+      0% { background: rgba(0, 204, 102, 0.15); }
+      100% { background: transparent; }
+    }
+    .fanfare-text {
+      position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+      font-size: 3rem; font-weight: bold; color: #ffd700;
+      text-shadow: 0 0 30px rgba(255, 215, 0, 0.5);
+      pointer-events: none; z-index: 1001;
+      animation: fanfare-text 2.5s ease-out forwards;
+      display: none; text-align: center;
+    }
+    .fanfare-text.active { display: block; }
+    @keyframes fanfare-text {
+      0% { opacity: 1; transform: translate(-50%, -50%) scale(0.5); }
+      20% { transform: translate(-50%, -50%) scale(1.2); }
+      40% { transform: translate(-50%, -50%) scale(1); }
+      100% { opacity: 0; transform: translate(-50%, -50%) scale(1); }
+    }
+
+    @media (max-width: 600px) {
+      h1 { font-size: 1.8rem; }
+      td, th { padding: 0.3rem; font-size: 0.8rem; }
+      .fanfare-text { font-size: 1.8rem; }
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+  <h1>LAN Party TMNF</h1>
+  <p class="subtitle">Leaderboard</p>
+  <div id="leaderboard"></div>
+</div>
+
+<div class="fanfare-overlay" id="fanfareOverlay"></div>
+<div class="fanfare-text" id="fanfareText"></div>
+
+<script>
+const POLL_INTERVAL = 5000;
+let bestTimes = {};
+
+function rankClass(rank) {
+  if (rank === 1) return 'gold';
+  if (rank === 2) return 'silver';
+  if (rank === 3) return 'bronze';
+  return '';
+}
+
+function renderLeaderboard(data) {
+  const el = document.getElementById('leaderboard');
+
+  if (!data.maps || data.maps.length === 0) {
+    el.innerHTML = '<p class="no-maps">No maps selected. <a href="/admin">Configure maps</a></p>';
+    return;
+  }
+
+  el.innerHTML = data.maps.map(m => `
+    <div class="map-section">
+      <h2 class="map-name">${m.name}</h2>
+      <p class="author-time">Author: ${m.author_time}</p>
+      ${m.records.length === 0
+        ? '<p class="empty">No records yet</p>'
+        : `<table>
+            <thead><tr><th class="rank">#</th><th>Player</th><th>Time</th></tr></thead>
+            <tbody>${m.records.map(r => `
+              <tr id="row-${m.map_id}-${r.rank}" class="${rankClass(r.rank)}">
+                <td class="rank">${r.rank}</td>
+                <td>${r.player}</td>
+                <td>${r.time}</td>
+              </tr>`).join('')}
+            </tbody>
+          </table>`
+      }
+    </div>
+  `).join('');
+}
+
+function checkNewRecords(data) {
+  let newRecords = [];
+
+  for (const m of (data.maps || [])) {
+    if (m.records.length === 0) continue;
+    const best = m.records[0].time_ms;
+    const prev = bestTimes[m.map_id];
+
+    if (prev !== undefined && best < prev) {
+      newRecords.push({ map: m.name, player: m.records[0].player, time: m.records[0].time });
+      const row = document.getElementById(`row-${m.map_id}-1`);
+      if (row) row.classList.add('new-record');
+    }
+    bestTimes[m.map_id] = best;
+  }
+
+  return newRecords;
+}
+
+function playFanfare() {
+  const ctx = new (window.AudioContext || window.webkitAudioContext)();
+  const now = ctx.currentTime;
+
+  const notes = [
+    { freq: 523.25, start: 0,    dur: 0.15 },  // C5
+    { freq: 659.25, start: 0.15, dur: 0.15 },  // E5
+    { freq: 783.99, start: 0.30, dur: 0.15 },  // G5
+    { freq: 1046.5, start: 0.45, dur: 0.4  },  // C6
+    { freq: 783.99, start: 0.55, dur: 0.15 },  // G5
+    { freq: 1046.5, start: 0.70, dur: 0.6  },  // C6 (long)
+  ];
+
+  for (const n of notes) {
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = 'triangle';
+    osc.frequency.value = n.freq;
+    gain.gain.setValueAtTime(0.25, now + n.start);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + n.start + n.dur);
+    osc.connect(gain).connect(ctx.destination);
+    osc.start(now + n.start);
+    osc.stop(now + n.start + n.dur + 0.05);
+  }
+}
+
+function showFanfareOverlay(records) {
+  const overlay = document.getElementById('fanfareOverlay');
+  const text = document.getElementById('fanfareText');
+
+  const r = records[0];
+  text.innerHTML = `NEW RECORD!<br>${r.player}<br>${r.time}`;
+
+  overlay.classList.remove('active');
+  text.classList.remove('active');
+  void overlay.offsetWidth;
+
+  overlay.classList.add('active');
+  text.classList.add('active');
+  playFanfare();
+
+  setTimeout(() => {
+    overlay.classList.remove('active');
+    text.classList.remove('active');
+  }, 2500);
+}
+
+async function poll() {
+  try {
+    const resp = await fetch('/api/leaderboard');
+    const data = await resp.json();
+    renderLeaderboard(data);
+    const newRecords = checkNewRecords(data);
+    if (newRecords.length > 0) {
+      showFanfareOverlay(newRecords);
+    }
+  } catch (e) {
+    console.error('Poll failed:', e);
+  }
+}
+
+poll();
+setInterval(poll, POLL_INTERVAL);
+</script>
+</body>
+</html>
