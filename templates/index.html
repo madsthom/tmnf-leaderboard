@@ -7,36 +7,45 @@
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body { background: #0f0f23; color: #ccc; font-family: 'Segoe UI', sans-serif; }
-    .container { max-width: 900px; margin: 0 auto; padding: 2rem 1rem; }
-    h1 { color: #00cc66; font-size: 2.5rem; text-align: center; }
-    .subtitle { text-align: center; color: #666; margin-bottom: 2rem; }
-    .map-section { margin-bottom: 2.5rem; }
-    .map-name { color: #0099ff; font-size: 1.4rem; margin-bottom: 0.3rem; border-bottom: 1px solid #222; padding-bottom: 0.3rem; }
-    .author-time { color: #555; font-size: 0.85rem; margin-bottom: 0.5rem; }
-    table { width: 100%; border-collapse: collapse; margin-bottom: 1rem; }
-    th { background: #1a1a2e; color: #00cc66; text-align: left; padding: 0.6rem; font-size: 0.85rem; }
-    td { padding: 0.5rem 0.6rem; border-bottom: 1px solid #1a1a2e; font-size: 0.95rem; }
+
+    header { text-align: center; padding: 1.5rem 1rem 1rem; }
+    header h1 { color: #00cc66; font-size: 2.5rem; }
+    header .subtitle { color: #666; }
+
+    .layout { display: grid; grid-template-columns: 1fr 280px; gap: 2rem; max-width: 1400px; margin: 0 auto; padding: 1rem 2rem 2rem; }
+    .maps { display: grid; grid-template-columns: repeat(2, 1fr); gap: 2rem; align-content: start; }
+    .sidebar { position: sticky; top: 1rem; align-self: start; display: flex; flex-direction: column; gap: 1.5rem; }
+
+    .map-section { min-width: 0; }
+    .map-name { color: #0099ff; font-size: 1.3rem; margin-bottom: 0.2rem; border-bottom: 1px solid #222; padding-bottom: 0.3rem; }
+    .author-time { color: #555; font-size: 0.8rem; margin-bottom: 0.4rem; }
+    table { width: 100%; border-collapse: collapse; }
+    th { background: #1a1a2e; color: #00cc66; text-align: left; padding: 0.4rem 0.5rem; font-size: 0.8rem; }
+    td { padding: 0.35rem 0.5rem; border-bottom: 1px solid #1a1a2e; font-size: 0.85rem; }
     tr:hover { background: #16213e; }
-    .rank { color: #555; width: 3rem; }
-    .empty { text-align: center; color: #555; padding: 2rem; font-size: 1.1rem; }
-    .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem; margin-top: 2.5rem; }
-    .stat-card h3 { color: #ff4444; font-size: 1rem; margin-bottom: 0.4rem; border-bottom: 1px solid #222; padding-bottom: 0.3rem; }
+    .rank { color: #555; width: 2.5rem; }
+    .empty { text-align: center; color: #555; padding: 1.5rem; font-size: 1rem; }
+
+    .stat-card { background: #12122a; border: 1px solid #1a1a2e; border-radius: 6px; padding: 0.8rem; }
+    .stat-card h3 { color: #ff4444; font-size: 0.9rem; margin-bottom: 0.4rem; padding-bottom: 0.3rem; border-bottom: 1px solid #222; }
     .stat-card ol { list-style: none; counter-reset: rank; }
-    .stat-card li { padding: 0.3rem 0; border-bottom: 1px solid #1a1a2e; font-size: 0.85rem; display: flex; justify-content: space-between; }
-    .stat-card li::before { counter-increment: rank; content: counter(rank) "."; color: #555; margin-right: 0.5rem; min-width: 1.2rem; }
-    .stat-card .val { color: #ff4444; font-weight: bold; }
-    .no-maps { text-align: center; color: #555; padding: 3rem 0; }
-    @media (max-width: 700px) { .stats-grid { grid-template-columns: 1fr; } }
+    .stat-card li { padding: 0.25rem 0; border-bottom: 1px solid #1a1a2e; font-size: 0.8rem; display: flex; justify-content: space-between; align-items: center; }
+    .stat-card li:last-child { border-bottom: none; }
+    .stat-card li::before { counter-increment: rank; content: counter(rank) "."; color: #555; margin-right: 0.4rem; min-width: 1.2rem; }
+    .stat-card .val { color: #ff4444; font-weight: bold; white-space: nowrap; }
+
+    .no-maps { text-align: center; color: #555; padding: 3rem 0; grid-column: 1 / -1; }
     .no-maps a { color: #0099ff; text-decoration: none; }
     .no-maps a:hover { text-decoration: underline; }
+
+    .gold { color: #ffd700; }
+    .silver { color: #c0c0c0; }
+    .bronze { color: #cd7f32; }
     .new-record { animation: flash 1.5s ease-out; }
     @keyframes flash {
       0% { background: #00cc66; color: #0f0f23; }
       100% { background: transparent; color: #ccc; }
     }
-    .gold { color: #ffd700; }
-    .silver { color: #c0c0c0; }
-    .bronze { color: #cd7f32; }
 
     .fanfare-overlay {
       display: none;
@@ -71,18 +80,29 @@
       100% { opacity: 0; transform: translate(-50%, -50%) scale(0.95); }
     }
 
-    @media (max-width: 600px) {
-      h1 { font-size: 1.8rem; }
-      td, th { padding: 0.3rem; font-size: 0.8rem; }
+    @media (max-width: 1000px) {
+      .layout { grid-template-columns: 1fr; }
+      .sidebar { position: static; display: grid; grid-template-columns: repeat(3, 1fr); }
+    }
+    @media (max-width: 700px) {
+      .maps { grid-template-columns: 1fr; }
+      .sidebar { grid-template-columns: 1fr; }
+      header h1 { font-size: 1.8rem; }
+      td, th { padding: 0.25rem 0.4rem; font-size: 0.75rem; }
       .fanfare-text { font-size: 1.8rem; }
+      .fanfare-text .player { font-size: 2.5rem; }
     }
   </style>
 </head>
 <body>
-<div class="container">
+<header>
   <h1>LAN Party TMNF</h1>
   <p class="subtitle">Leaderboard</p>
-  <div id="leaderboard"></div>
+</header>
+
+<div class="layout">
+  <div class="maps" id="maps"></div>
+  <div class="sidebar" id="sidebar"></div>
 </div>
 
 <div class="fanfare-overlay" id="fanfareOverlay"></div>
@@ -100,14 +120,16 @@ function rankClass(rank) {
 }
 
 function renderLeaderboard(data) {
-  const el = document.getElementById('leaderboard');
+  const mapsEl = document.getElementById('maps');
+  const sidebarEl = document.getElementById('sidebar');
 
   if (!data.maps || data.maps.length === 0) {
-    el.innerHTML = '<p class="no-maps">No maps selected. <a href="/admin">Configure maps</a></p>';
+    mapsEl.innerHTML = '<p class="no-maps">No maps selected. <a href="/admin">Configure maps</a></p>';
+    sidebarEl.innerHTML = '';
     return;
   }
 
-  const maps = data.maps.map(m => `
+  mapsEl.innerHTML = data.maps.map(m => `
     <div class="map-section">
       <h2 class="map-name">${m.name}</h2>
       <p class="author-time">Author: ${m.author_time}</p>
@@ -128,29 +150,25 @@ function renderLeaderboard(data) {
   `).join('');
 
   const s = data.stats || {};
-  const stats = `
-    <div class="stats-grid">
-      <div class="stat-card">
-        <h3>Most Time Wasted</h3>
-        <ol>${(s.time_wasted || []).map(r =>
-          `<li><span>${r.player}</span><span class="val">${r.hours}h</span></li>`
-        ).join('') || '<li>No data</li>'}</ol>
-      </div>
-      <div class="stat-card">
-        <h3>Chat Spammer</h3>
-        <ol>${(s.chat_spammers || []).map(r =>
-          `<li><span>${r.player}</span><span class="val">${r.messages} msgs</span></li>`
-        ).join('') || '<li>No data</li>'}</ol>
-      </div>
-      <div class="stat-card">
-        <h3>Map Hater</h3>
-        <ol>${(s.map_haters || []).map(r =>
-          `<li><span>${r.player}</span><span class="val">${r.avg_vote}/100</span></li>`
-        ).join('') || '<li>No data</li>'}</ol>
-      </div>
+  sidebarEl.innerHTML = `
+    <div class="stat-card">
+      <h3>Most Time Wasted</h3>
+      <ol>${(s.time_wasted || []).map(r =>
+        `<li><span>${r.player}</span><span class="val">${r.hours}h</span></li>`
+      ).join('') || '<li>No data</li>'}</ol>
+    </div>
+    <div class="stat-card">
+      <h3>Chat Spammer</h3>
+      <ol>${(s.chat_spammers || []).map(r =>
+        `<li><span>${r.player}</span><span class="val">${r.messages} msgs</span></li>`
+      ).join('') || '<li>No data</li>'}</ol>
+    </div>
+    <div class="stat-card">
+      <h3>Map Hater</h3>
+      <ol>${(s.map_haters || []).map(r =>
+        `<li><span>${r.player}</span><span class="val">${r.avg_vote}/100</span></li>`
+      ).join('') || '<li>No data</li>'}</ol>
     </div>`;
-
-  el.innerHTML = maps + stats;
 }
 
 function checkNewRecords(data) {
