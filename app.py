@@ -1,11 +1,13 @@
 import os
 import re
+import secrets
 from contextlib import asynccontextmanager
 from pathlib import Path
 
 import asyncpg
-from fastapi import FastAPI, Form, Request
+from fastapi import Depends, FastAPI, HTTPException, Request, status
 from fastapi.responses import HTMLResponse, PlainTextResponse, RedirectResponse
+from fastapi.security import HTTPBasic, HTTPBasicCredentials
 from fastapi.templating import Jinja2Templates
 
 DB_CONFIG = {
@@ -40,6 +42,21 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(lifespan=lifespan)
 templates = Jinja2Templates(directory=Path(__file__).parent / "templates")
+security = HTTPBasic()
+
+ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD", "")
+
+
+def verify_admin(credentials: HTTPBasicCredentials = Depends(security)):
+    if not ADMIN_PASSWORD:
+        raise HTTPException(status_code=503, detail="ADMIN_PASSWORD not configured")
+    if not secrets.compare_digest(credentials.password.encode(), ADMIN_PASSWORD.encode()):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid credentials",
+            headers={"WWW-Authenticate": "Basic"},
+        )
+    return credentials
 
 
 def strip_tm_formatting(text: str) -> str:
@@ -63,7 +80,7 @@ async def healthz():
 
 
 @app.get("/admin", response_class=HTMLResponse)
-async def admin_page(request: Request):
+async def admin_page(request: Request, _=Depends(verify_admin)):
     p = await get_pool()
     async with p.acquire() as conn:
         maps = await conn.fetch("SELECT id, name FROM maps ORDER BY name")
@@ -81,7 +98,7 @@ async def admin_page(request: Request):
 
 
 @app.post("/admin")
-async def admin_save(request: Request):
+async def admin_save(request: Request, _=Depends(verify_admin)):
     form = await request.form()
     featured_map_ids.clear()
     for key, val in form.multi_items():
