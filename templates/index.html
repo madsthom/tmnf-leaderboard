@@ -156,18 +156,6 @@ function renderLeaderboard(data) {
       <ol>${(s.time_wasted || []).map(r =>
         `<li><span>${r.player}</span><span class="val">${r.hours}h</span></li>`
       ).join('') || '<li>No data</li>'}</ol>
-    </div>
-    <div class="stat-card">
-      <h3>Chat Spammer</h3>
-      <ol>${(s.chat_spammers || []).map(r =>
-        `<li><span>${r.player}</span><span class="val">${r.messages} msgs</span></li>`
-      ).join('') || '<li>No data</li>'}</ol>
-    </div>
-    <div class="stat-card">
-      <h3>Map Hater</h3>
-      <ol>${(s.map_haters || []).map(r =>
-        `<li><span>${r.player}</span><span class="val">${r.avg_vote}/100</span></li>`
-      ).join('') || '<li>No data</li>'}</ol>
     </div>`;
 }
 
