@@ -147,7 +147,59 @@ async def api_leaderboard():
                 ],
             })
 
-    return {"maps": result}
+        # Toxic stats
+        time_wasted = await conn.fetch(
+            "SELECT nickname, time_played FROM players WHERE time_played > 0 ORDER BY time_played DESC LIMIT 10"
+        )
+        chat_spammers = await conn.fetch(
+            """
+            SELECT p.nickname, COUNT(*) AS messages
+            FROM chat c
+            JOIN players p ON p.id = c.player_id
+            GROUP BY p.id, p.nickname
+            ORDER BY messages DESC
+            LIMIT 10
+            """
+        )
+        map_haters = await conn.fetch(
+            """
+            SELECT p.nickname, ROUND(AVG(v.vote)::numeric, 1) AS avg_vote, COUNT(*) AS votes_cast
+            FROM votes v
+            JOIN players p ON p.id = v.player_id
+            GROUP BY p.id, p.nickname
+            HAVING COUNT(*) >= 2
+            ORDER BY avg_vote ASC
+            LIMIT 10
+            """
+        )
+
+    return {
+        "maps": result,
+        "stats": {
+            "time_wasted": [
+                {
+                    "player": strip_tm_formatting(r["nickname"]),
+                    "hours": round(r["time_played"] / 3600, 1),
+                }
+                for r in time_wasted
+            ],
+            "chat_spammers": [
+                {
+                    "player": strip_tm_formatting(r["nickname"]),
+                    "messages": r["messages"],
+                }
+                for r in chat_spammers
+            ],
+            "map_haters": [
+                {
+                    "player": strip_tm_formatting(r["nickname"]),
+                    "avg_vote": float(r["avg_vote"]),
+                    "votes_cast": r["votes_cast"],
+                }
+                for r in map_haters
+            ],
+        },
+    }
 
 
 @app.get("/", response_class=HTMLResponse)
