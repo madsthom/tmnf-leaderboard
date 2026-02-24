@@ -34,29 +34,34 @@
     .fanfare-overlay {
       display: none;
       position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-      background: rgba(0, 204, 102, 0.08);
       pointer-events: none; z-index: 1000;
-      animation: fanfare-bg 2s ease-out forwards;
+      animation: fanfare-bg 6s ease-out forwards;
     }
     .fanfare-overlay.active { display: block; }
     @keyframes fanfare-bg {
-      0% { background: rgba(0, 204, 102, 0.15); }
+      0% { background: rgba(0, 204, 102, 0.2); }
+      30% { background: rgba(255, 215, 0, 0.1); }
       100% { background: transparent; }
     }
     .fanfare-text {
       position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
-      font-size: 3rem; font-weight: bold; color: #ffd700;
-      text-shadow: 0 0 30px rgba(255, 215, 0, 0.5);
+      font-size: 4rem; font-weight: bold; color: #ffd700;
+      text-shadow: 0 0 40px rgba(255, 215, 0, 0.6), 0 0 80px rgba(255, 215, 0, 0.3);
       pointer-events: none; z-index: 1001;
-      animation: fanfare-text 2.5s ease-out forwards;
-      display: none; text-align: center;
+      animation: fanfare-text 6s ease-out forwards;
+      display: none; text-align: center; line-height: 1.4;
     }
     .fanfare-text.active { display: block; }
+    .fanfare-text .label { font-size: 2rem; color: #00cc66; display: block; margin-bottom: 0.3rem; }
+    .fanfare-text .player { font-size: 4.5rem; display: block; }
+    .fanfare-text .time { font-size: 3rem; color: #fff; display: block; margin-top: 0.2rem; }
+    .fanfare-text .map { font-size: 1.5rem; color: #0099ff; display: block; margin-top: 0.3rem; }
     @keyframes fanfare-text {
-      0% { opacity: 1; transform: translate(-50%, -50%) scale(0.5); }
-      20% { transform: translate(-50%, -50%) scale(1.2); }
-      40% { transform: translate(-50%, -50%) scale(1); }
-      100% { opacity: 0; transform: translate(-50%, -50%) scale(1); }
+      0% { opacity: 0; transform: translate(-50%, -50%) scale(0.3); }
+      8% { opacity: 1; transform: translate(-50%, -50%) scale(1.3); }
+      15% { transform: translate(-50%, -50%) scale(1); }
+      75% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+      100% { opacity: 0; transform: translate(-50%, -50%) scale(0.95); }
     }
 
     @media (max-width: 600px) {
@@ -139,26 +144,39 @@ function playFanfare() {
   const ctx = new (window.AudioContext || window.webkitAudioContext)();
   const now = ctx.currentTime;
 
-  const notes = [
-    { freq: 523.25, start: 0,    dur: 0.15 },  // C5
-    { freq: 659.25, start: 0.15, dur: 0.15 },  // E5
-    { freq: 783.99, start: 0.30, dur: 0.15 },  // G5
-    { freq: 1046.5, start: 0.45, dur: 0.4  },  // C6
-    { freq: 783.99, start: 0.55, dur: 0.15 },  // G5
-    { freq: 1046.5, start: 0.70, dur: 0.6  },  // C6 (long)
-  ];
-
-  for (const n of notes) {
+  function playNote(freq, start, dur, vol, type) {
     const osc = ctx.createOscillator();
     const gain = ctx.createGain();
-    osc.type = 'triangle';
-    osc.frequency.value = n.freq;
-    gain.gain.setValueAtTime(0.25, now + n.start);
-    gain.gain.exponentialRampToValueAtTime(0.001, now + n.start + n.dur);
+    osc.type = type || 'triangle';
+    osc.frequency.value = freq;
+    gain.gain.setValueAtTime(vol, now + start);
+    gain.gain.setValueAtTime(vol, now + start + dur * 0.6);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + start + dur);
     osc.connect(gain).connect(ctx.destination);
-    osc.start(now + n.start);
-    osc.stop(now + n.start + n.dur + 0.05);
+    osc.start(now + start);
+    osc.stop(now + start + dur + 0.05);
   }
+
+  // Triumphant brass fanfare
+  // First phrase: rising C major arpeggio
+  playNote(523.25, 0.0,  0.20, 0.20, 'sawtooth');  // C5
+  playNote(659.25, 0.18, 0.20, 0.20, 'sawtooth');  // E5
+  playNote(783.99, 0.36, 0.20, 0.20, 'sawtooth');  // G5
+  playNote(1046.5, 0.54, 0.50, 0.25, 'sawtooth');  // C6 (hold)
+
+  // Second phrase: triumphant resolution
+  playNote(880.00, 1.2, 0.20, 0.20, 'sawtooth');  // A5
+  playNote(987.77, 1.4, 0.20, 0.20, 'sawtooth');  // B5
+  playNote(1046.5, 1.6, 0.30, 0.25, 'sawtooth');  // C6
+  playNote(1318.5, 1.9, 0.25, 0.22, 'sawtooth');  // E6
+  playNote(1568.0, 2.15, 0.90, 0.25, 'sawtooth'); // G6 (long hold)
+
+  // Final chord: big C major
+  playNote(523.25, 3.2, 1.8, 0.12, 'triangle');  // C5
+  playNote(659.25, 3.2, 1.8, 0.12, 'triangle');  // E5
+  playNote(783.99, 3.2, 1.8, 0.12, 'triangle');  // G5
+  playNote(1046.5, 3.2, 1.8, 0.15, 'triangle');  // C6
+  playNote(1318.5, 3.2, 1.8, 0.10, 'triangle');  // E6
 }
 
 function showFanfareOverlay(records) {
@@ -166,7 +184,10 @@ function showFanfareOverlay(records) {
   const text = document.getElementById('fanfareText');
 
   const r = records[0];
-  text.innerHTML = `NEW RECORD!<br>${r.player}<br>${r.time}`;
+  text.innerHTML = `<span class="label">NEW RECORD!</span>`
+    + `<span class="player">${r.player}</span>`
+    + `<span class="time">${r.time}</span>`
+    + `<span class="map">${r.map}</span>`;
 
   overlay.classList.remove('active');
   text.classList.remove('active');
@@ -179,7 +200,7 @@ function showFanfareOverlay(records) {
   setTimeout(() => {
     overlay.classList.remove('active');
     text.classList.remove('active');
-  }, 2500);
+  }, 6000);
 }
 
 async function poll() {
