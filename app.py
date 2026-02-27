@@ -29,10 +29,19 @@ async def get_pool() -> asyncpg.Pool:
     return pool
 
 
+DEFAULT_MAPS = os.environ.get("DEFAULT_MAPS", "avatar,eventual,observance")
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     try:
-        await get_pool()
+        p = await get_pool()
+        async with p.acquire() as conn:
+            rows = await conn.fetch("SELECT id, name FROM maps")
+            for row in rows:
+                clean = strip_tm_formatting(row["name"]).lower()
+                if any(k in clean for k in DEFAULT_MAPS.lower().split(",")):
+                    featured_map_ids.add(row["id"])
     except Exception:
         pass  # DB may not be ready yet; pool created lazily on first request
     yield
