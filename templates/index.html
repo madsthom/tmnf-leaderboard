@@ -217,6 +217,14 @@ function playFanfare() {
   playNote(1318.5, 3.2, 1.8, 0.10, 'triangle');  // E6
 }
 
+function announceRecord(player, map) {
+  const msg = new SpeechSynthesisUtterance(`${player} has the new record on ${map}`);
+  msg.rate = 0.9;
+  msg.pitch = 1.1;
+  msg.volume = 1;
+  speechSynthesis.speak(msg);
+}
+
 function showFanfareOverlay(records) {
   const overlay = document.getElementById('fanfareOverlay');
   const text = document.getElementById('fanfareText');
@@ -234,6 +242,7 @@ function showFanfareOverlay(records) {
   overlay.classList.add('active');
   text.classList.add('active');
   playFanfare();
+  announceRecord(r.player, r.map);
 
   setTimeout(() => {
     overlay.classList.remove('active');
