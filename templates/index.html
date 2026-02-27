@@ -105,7 +105,10 @@
   <div class="sidebar" id="sidebar"></div>
 </div>
 
-<div id="clickPrompt" style="position:fixed;bottom:1rem;left:50%;transform:translateX(-50%);background:#1a1a2e;color:#555;padding:0.5rem 1.2rem;border-radius:4px;font-size:0.8rem;z-index:999;cursor:pointer;" onclick="unlockAudio()">Click anywhere to enable sound</div>
+<div id="clickPrompt" style="position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(15,15,35,0.95);z-index:9999;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-direction:column;" onclick="unlockAudio()">
+  <div style="color:#00cc66;font-size:3rem;font-weight:bold;margin-bottom:1rem;">LAN Party TMNF</div>
+  <div style="color:#ffd700;font-size:1.5rem;">Click to enable sound</div>
+</div>
 <div class="fanfare-overlay" id="fanfareOverlay"></div>
 <div class="fanfare-text" id="fanfareText"></div>
 
