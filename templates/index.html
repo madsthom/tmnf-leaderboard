@@ -105,10 +105,6 @@
   <div class="sidebar" id="sidebar"></div>
 </div>
 
-<div id="clickPrompt" style="position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(15,15,35,0.95);z-index:9999;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-direction:column;" onclick="unlockAudio()">
-  <div style="color:#00cc66;font-size:3rem;font-weight:bold;margin-bottom:1rem;">LAN Party TMNF</div>
-  <div style="color:#ffd700;font-size:1.5rem;">Click to enable sound</div>
-</div>
 <div class="fanfare-overlay" id="fanfareOverlay"></div>
 <div class="fanfare-text" id="fanfareText"></div>
 
@@ -221,28 +217,6 @@ function playFanfare() {
   playNote(1318.5, 3.2, 1.8, 0.10, 'triangle');  // E6
 }
 
-let audioUnlocked = false;
-function unlockAudio() {
-  if (audioUnlocked) return;
-  const ctx = new (window.AudioContext || window.webkitAudioContext)();
-  ctx.resume().then(() => ctx.close());
-  speechSynthesis.speak(new SpeechSynthesisUtterance(''));
-  audioUnlocked = true;
-  document.getElementById('clickPrompt').style.display = 'none';
-}
-document.addEventListener('click', unlockAudio, { once: true });
-document.addEventListener('keydown', unlockAudio, { once: true });
-
-function announceRecord(player, map) {
-  setTimeout(() => {
-    const msg = new SpeechSynthesisUtterance(`${player} has the new record on ${map}`);
-    msg.rate = 0.9;
-    msg.pitch = 1.1;
-    msg.volume = 1;
-    speechSynthesis.speak(msg);
-  }, 5000);
-}
-
 function showFanfareOverlay(records) {
   const overlay = document.getElementById('fanfareOverlay');
   const text = document.getElementById('fanfareText');
@@ -260,7 +234,6 @@ function showFanfareOverlay(records) {
   overlay.classList.add('active');
   text.classList.add('active');
   playFanfare();
-  announceRecord(r.player, r.map);
 
   setTimeout(() => {
     overlay.classList.remove('active');
