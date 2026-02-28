@@ -13,7 +13,7 @@
     header .subtitle { color: #666; }
 
     .layout { display: grid; grid-template-columns: 1fr 280px; gap: 2rem; max-width: 1400px; margin: 0 auto; padding: 1rem 2rem 2rem; }
-    .maps { display: grid; grid-template-columns: repeat(2, 1fr); gap: 2rem; align-content: start; }
+    .maps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 2rem; align-content: start; }
     .sidebar { position: sticky; top: 1rem; align-self: start; display: flex; flex-direction: column; gap: 1.5rem; }
 
     .map-section { min-width: 0; }
@@ -82,10 +82,10 @@
 
     @media (max-width: 1000px) {
       .layout { grid-template-columns: 1fr; }
+      .maps { grid-template-columns: 1fr; }
       .sidebar { position: static; display: grid; grid-template-columns: repeat(3, 1fr); }
     }
     @media (max-width: 700px) {
-      .maps { grid-template-columns: 1fr; }
       .sidebar { grid-template-columns: 1fr; }
       header h1 { font-size: 1.8rem; }
       td, th { padding: 0.25rem 0.4rem; font-size: 0.75rem; }
